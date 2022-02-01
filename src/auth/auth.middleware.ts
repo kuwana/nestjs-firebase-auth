@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import * as secret from './secret.json';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
@@ -11,14 +11,24 @@ export class AuthMiddleware implements NestMiddleware {
       credential: applicationDefault()
     }));
   }
-  async use(req: any, res: any, next: () => void) {
+  async use(req: Request, res: Response, next: () => void) {
     const token = req.headers.authorization;
     if (token !== null && token !== '') {
-      const decodedToken = await this.auth.verifyIdToken(token.replace('Bearer ', ''));
-      const user = {
-        email: decodedToken.email
+      try {
+        const decodedToken = await this.auth.verifyIdToken(token.replace('Bearer ', ''));
+        const user: any = {
+          email: decodedToken.email
+        }
+        req.user = user;
+      } catch (e) {
+        console.error(e);
+        res.status(403).json({
+          statusCode: 403,
+          timestamp: new Date().toISOString(),
+          path: req.url,
+          message: 'Access Denied.',
+        })
       }
-      req['user'] = user;
     }
     next();
   }
