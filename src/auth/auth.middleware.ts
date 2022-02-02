@@ -7,15 +7,19 @@ import { getAuth } from 'firebase-admin/auth';
 export class AuthMiddleware implements NestMiddleware {
   private auth: any;
   constructor() {
-    this.auth = getAuth(initializeApp({
-      credential: applicationDefault()
-    }));
+    this.auth = getAuth(
+      initializeApp({
+        credential: applicationDefault(),
+      }),
+    );
   }
   async use(req: Request, res: Response, next: () => void) {
     const token = req.headers.authorization;
     if (token !== null && token !== '') {
       try {
-        const decodedToken = await this.auth.verifyIdToken(token.replace('Bearer ', ''));
+        const decodedToken = await this.auth.verifyIdToken(
+          token.replace('Bearer ', ''),
+        );
         const user: any = {
           email: decodedToken.email
         }
